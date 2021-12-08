@@ -90,7 +90,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   @override
   void dispose() {
     _ambiguate(WidgetsBinding.instance)?.removeObserver(this);
-    // _flashModeControlRowAnimationController.dispose();
     _exposureModeControlRowAnimationController.dispose();
     super.dispose();
   }
@@ -146,11 +145,9 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           Padding(
             padding: const EdgeInsets.all(5.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 _cameraTogglesRowWidget(),
-                // _thumbnailWidget(),
               ],
             ),
           ),
@@ -207,50 +204,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
 
     await controller!.setZoomLevel(_currentScale);
   }
-
-  /// Display the thumbnail of the captured image or video.
-  // Widget _thumbnailWidget() {
-  //   final VideoPlayerController? localVideoController = videoController;
-
-  //   return Expanded(
-  //     child: Align(
-  //       alignment: Alignment.centerRight,
-  //       child: Row(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: <Widget>[
-  //           localVideoController == null && imageFile == null
-  //               ? Container()
-  //               : SizedBox(
-  //                   child: (localVideoController == null)
-  //                       ? (
-  //                           // The captured image on the web contains a network-accessible URL
-  //                           // pointing to a location within the browser. It may be displayed
-  //                           // either with Image.network or Image.memory after loading the image
-  //                           // bytes to memory.
-  //                           kIsWeb
-  //                               ? Image.network(imageFile!.path)
-  //                               : Image.file(File(imageFile!.path)))
-  //                       : Container(
-  //                           child: Center(
-  //                             child: AspectRatio(
-  //                                 aspectRatio:
-  //                                     localVideoController.value.size != null
-  //                                         ? localVideoController
-  //                                             .value.aspectRatio
-  //                                         : 1.0,
-  //                                 child: VideoPlayer(localVideoController)),
-  //                           ),
-  //                           decoration: BoxDecoration(
-  //                               border: Border.all(color: Colors.pink)),
-  //                         ),
-  //                   width: 64.0,
-  //                   height: 64.0,
-  //                 ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   /// Display a bar with buttons to change the flash and exposure modes
   Widget _modeControlRowWidget() {
@@ -477,8 +430,17 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
       details.localPosition.dx / constraints.maxWidth,
       details.localPosition.dy / constraints.maxHeight,
     );
+
     cameraController.setExposurePoint(offset);
     cameraController.setFocusPoint(offset);
+    showInSnackBar(
+        "Locking focus and exposure to (${offset.dx}, ${offset.dy})");
+
+    Future.delayed(const Duration(seconds: 2), () {
+      cameraController.setFocusMode(FocusMode.locked);
+      cameraController.setExposureMode(ExposureMode.locked);
+      showInSnackBar("Focus and exposure locked");
+    });
   }
 
   void onNewCameraSelected(CameraDescription cameraDescription) async {
@@ -534,19 +496,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     }
   }
 
-  void onTakePictureButtonPressed() {
-    takePicture().then((XFile? file) {
-      if (mounted) {
-        setState(() {
-          imageFile = file;
-          videoController?.dispose();
-          videoController = null;
-        });
-        if (file != null) showInSnackBar('Picture saved to ${file.path}');
-      }
-    });
-  }
-
   void onExposureModeButtonPressed() {
     if (_exposureModeControlRowAnimationController.value == 1) {
       _exposureModeControlRowAnimationController.reverse();
@@ -565,152 +514,18 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     }
   }
 
-  void onSetFlashModeButtonPressed(FlashMode mode) {
-    setFlashMode(mode).then((_) {
-      if (mounted) setState(() {});
-      showInSnackBar('Flash mode set to ${mode.toString().split('.').last}');
-    });
-  }
-
   void onSetExposureModeButtonPressed(ExposureMode mode) {
     setExposureMode(mode).then((_) {
       if (mounted) setState(() {});
-      showInSnackBar('Exposure mode set to ${mode.toString().split('.').last}');
+      // showInSnackBar('Exposure mode set to ${mode.toString().split('.').last}');
     });
   }
 
   void onSetFocusModeButtonPressed(FocusMode mode) {
     setFocusMode(mode).then((_) {
       if (mounted) setState(() {});
-      showInSnackBar('Focus mode set to ${mode.toString().split('.').last}');
+      // showInSnackBar('Focus mode set to ${mode.toString().split('.').last}');
     });
-  }
-
-  void onVideoRecordButtonPressed() {
-    startVideoRecording().then((_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  void onStopButtonPressed() {
-    stopVideoRecording().then((file) {
-      if (mounted) setState(() {});
-      if (file != null) {
-        showInSnackBar('Video recorded to ${file.path}');
-        videoFile = file;
-        _startVideoPlayer();
-      }
-    });
-  }
-
-  Future<void> onPausePreviewButtonPressed() async {
-    final CameraController? cameraController = controller;
-
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      showInSnackBar('Error: select a camera first.');
-      return;
-    }
-
-    if (cameraController.value.isPreviewPaused) {
-      await cameraController.resumePreview();
-    } else {
-      await cameraController.pausePreview();
-    }
-
-    if (mounted) setState(() {});
-  }
-
-  void onPauseButtonPressed() {
-    pauseVideoRecording().then((_) {
-      if (mounted) setState(() {});
-      showInSnackBar('Video recording paused');
-    });
-  }
-
-  void onResumeButtonPressed() {
-    resumeVideoRecording().then((_) {
-      if (mounted) setState(() {});
-      showInSnackBar('Video recording resumed');
-    });
-  }
-
-  Future<void> startVideoRecording() async {
-    final CameraController? cameraController = controller;
-
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      showInSnackBar('Error: select a camera first.');
-      return;
-    }
-
-    if (cameraController.value.isRecordingVideo) {
-      // A recording is already started, do nothing.
-      return;
-    }
-
-    try {
-      await cameraController.startVideoRecording();
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      return;
-    }
-  }
-
-  Future<XFile?> stopVideoRecording() async {
-    final CameraController? cameraController = controller;
-
-    if (cameraController == null || !cameraController.value.isRecordingVideo) {
-      return null;
-    }
-
-    try {
-      return cameraController.stopVideoRecording();
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      return null;
-    }
-  }
-
-  Future<void> pauseVideoRecording() async {
-    final CameraController? cameraController = controller;
-
-    if (cameraController == null || !cameraController.value.isRecordingVideo) {
-      return null;
-    }
-
-    try {
-      await cameraController.pauseVideoRecording();
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      rethrow;
-    }
-  }
-
-  Future<void> resumeVideoRecording() async {
-    final CameraController? cameraController = controller;
-
-    if (cameraController == null || !cameraController.value.isRecordingVideo) {
-      return null;
-    }
-
-    try {
-      await cameraController.resumeVideoRecording();
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      rethrow;
-    }
-  }
-
-  Future<void> setFlashMode(FlashMode mode) async {
-    if (controller == null) {
-      return;
-    }
-
-    try {
-      await controller!.setFlashMode(mode);
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      rethrow;
-    }
   }
 
   Future<void> setExposureMode(ExposureMode mode) async {
@@ -752,56 +567,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     } on CameraException catch (e) {
       _showCameraException(e);
       rethrow;
-    }
-  }
-
-  Future<void> _startVideoPlayer() async {
-    if (videoFile == null) {
-      return;
-    }
-
-    final VideoPlayerController vController = kIsWeb
-        ? VideoPlayerController.network(videoFile!.path)
-        : VideoPlayerController.file(File(videoFile!.path));
-
-    videoPlayerListener = () {
-      if (videoController != null && videoController!.value.size != null) {
-        // Refreshing the state to update video player with the correct ratio.
-        if (mounted) setState(() {});
-        videoController!.removeListener(videoPlayerListener!);
-      }
-    };
-    vController.addListener(videoPlayerListener!);
-    await vController.setLooping(true);
-    await vController.initialize();
-    await videoController?.dispose();
-    if (mounted) {
-      setState(() {
-        imageFile = null;
-        videoController = vController;
-      });
-    }
-    await vController.play();
-  }
-
-  Future<XFile?> takePicture() async {
-    final CameraController? cameraController = controller;
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      showInSnackBar('Error: select a camera first.');
-      return null;
-    }
-
-    if (cameraController.value.isTakingPicture) {
-      // A capture is already pending, do nothing.
-      return null;
-    }
-
-    try {
-      XFile file = await cameraController.takePicture();
-      return file;
-    } on CameraException catch (e) {
-      _showCameraException(e);
-      return null;
     }
   }
 
