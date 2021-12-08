@@ -141,16 +141,16 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
               ),
             ),
           ),
-          _modeControlRowWidget(),
           Padding(
             padding: const EdgeInsets.all(5.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 _cameraTogglesRowWidget(),
               ],
             ),
           ),
+          _modeControlRowWidget(),
         ],
       ),
     );
@@ -342,7 +342,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           color: Colors.grey.shade50,
           child: Column(
             children: [
-              Center(
+              const Center(
                 child: Text("Focus Mode"),
               ),
               Row(
@@ -350,7 +350,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   TextButton(
-                    child: Text('AUTO'),
+                    child: const Text('AUTO'),
                     style: styleAuto,
                     onPressed: controller != null
                         ? () => onSetFocusModeButtonPressed(FocusMode.auto)
@@ -434,7 +434,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     cameraController.setExposurePoint(offset);
     cameraController.setFocusPoint(offset);
     showInSnackBar(
-        "Locking focus and exposure to (${offset.dx}, ${offset.dy})");
+        "Calibration focus and exposure to (${offset.dx.toStringAsFixed(3)}, ${offset.dy.toStringAsFixed(3)})");
 
     Future.delayed(const Duration(seconds: 2), () {
       cameraController.setFocusMode(FocusMode.locked);
