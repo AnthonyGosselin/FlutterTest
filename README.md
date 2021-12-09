@@ -32,7 +32,7 @@ Future.delayed(const Duration(seconds: 2), () {
   showInSnackBar("Focus and exposure locked");
 });
 ```
-(main.dart l.429)
+[main.dart l.429](https://github.com/AnthonyGosselin/FlutterTest/blob/c4aa1e5739b977de29f0c63308f654f7603c0ead/lib/main.dart#L429)
 
 -----------------
 
