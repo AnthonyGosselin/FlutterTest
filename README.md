@@ -3,7 +3,7 @@
 Application de démonstration de control de caméra avec Flutter.
 Utilisation du plugin package 'camera' de Flutter: https://pub.dev/packages/camera
 
-Testé sur iOS.
+Testé sur iOS 14.7.1, iPhone7.
 
 
 
